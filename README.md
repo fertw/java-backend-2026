@@ -31,8 +31,6 @@ curl http://localhost:8083/api/ping
 
 ## Endpoints
 
-La colección de Postman está en `postman/LimpiezaIT.postman_collection.json` (variable `baseUrl` = `http://localhost:8083`).
-
 | Método | URL | Descripción | Rol requerido |
 |---|---|---|---|
 | `GET` | `/api/ping` | Verifica que la API esté levantada | — |
@@ -41,6 +39,47 @@ La colección de Postman está en `postman/LimpiezaIT.postman_collection.json` (
 | `POST` | `/api/productos` | Crea un producto (201) | — |
 | `PUT` | `/api/productos/{id}` | Modifica un producto (404 si no existe) | — |
 | `DELETE` | `/api/productos/{id}` | Borra un producto (204, o 404 si no existe) | — |
+
+## Probar con Postman
+
+La colección está en `postman/LimpiezaIT.postman_collection.json` y trae todos los requests listos (los que mandan datos ya tienen el JSON cargado en el body).
+
+### Importar la colección
+
+1. Abrir Postman y tocar **Import** (arriba a la izquierda).
+2. Arrastrar el archivo `postman/LimpiezaIT.postman_collection.json`, o tocar *files* y buscarlo dentro de la carpeta del proyecto.
+   - Si no clonaste el repo, también se puede pegar esta URL en el cuadro de Import:
+     `https://raw.githubusercontent.com/fertw/java-backend-2026/main/postman/LimpiezaIT.postman_collection.json`
+3. Confirmar con **Import**. Aparece la colección **LimpiezaIT** en el panel izquierdo.
+
+### Puerto
+
+La URL base está en la variable `baseUrl` de la colección (`http://localhost:8083`). Si tu API corre en otro puerto: clic en la colección → pestaña **Variables** → cambiar `baseUrl` → **Save**.
+
+### Enviar JSON a mano
+
+Si armás un request desde cero (por ejemplo, un `POST` para crear un producto):
+
+1. Pestaña **Body** → **raw**.
+2. En el desplegable de la derecha cambiar *Text* por **JSON**.
+3. Pegar el JSON y tocar **Send**:
+
+```json
+{
+  "nombre": "Lavandina 1L",
+  "precio": 1500,
+  "descripcion": "Uso general",
+  "urlFoto": "https://img.limpiezait.com/lavandina.png"
+}
+```
+
+El `id` no se manda: lo asigna la API.
+
+| Problema | Causa |
+|---|---|
+| **415 Unsupported Media Type** | El body quedó en *Text*, no en **JSON** |
+| Se guarda todo en `null` | Los nombres de los campos no coinciden con los de la clase |
+| `Could not send request` | La API no está levantada o el puerto de `baseUrl` es otro |
 
 ## Estructura del repositorio
 
