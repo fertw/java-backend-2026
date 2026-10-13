@@ -26,22 +26,21 @@ Prueba rápida:
 
 ```bash
 curl http://localhost:8083/api/ping
-# pong
+# {"app":"LimpiezaIT","estado":"ok"}
 ```
 
 ## Endpoints
 
-Por ahora solo existe:
-
-| Método | URL | Descripción |
-|---|---|---|
-| `GET` | `/api/ping` | Verifica que la API esté levantada (responde `pong`) |
-
-Tabla para completar en cada clase:
+La colección de Postman está en `postman/LimpiezaIT.postman_collection.json` (variable `baseUrl` = `http://localhost:8083`).
 
 | Método | URL | Descripción | Rol requerido |
 |---|---|---|---|
-| | | | |
+| `GET` | `/api/ping` | Verifica que la API esté levantada | — |
+| `GET` | `/api/productos` | Lista todos los productos | — |
+| `GET` | `/api/productos/{id}` | Busca un producto por id (404 si no existe) | — |
+| `POST` | `/api/productos` | Crea un producto (201) | — |
+| `PUT` | `/api/productos/{id}` | Modifica un producto (404 si no existe) | — |
+| `DELETE` | `/api/productos/{id}` | Borra un producto (204, o 404 si no existe) | — |
 
 ## Estructura del repositorio
 
