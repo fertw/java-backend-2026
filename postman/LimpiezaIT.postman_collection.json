@@ -1,0 +1,168 @@
+{
+  "info": {
+    "name": "LimpiezaIT",
+    "description": "Colección del curso Java Backend de educaciónIT. Clase 1: CRUD de productos en memoria.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8083"
+    }
+  ],
+  "item": [
+    {
+      "name": "Ping",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/ping",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "ping"
+          ]
+        },
+        "description": "Esperado: 200"
+      }
+    },
+    {
+      "name": "Productos",
+      "item": [
+        {
+          "name": "1. Crear producto",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos"
+              ]
+            },
+            "description": "Esperado: 201 con id",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Lavandina 1L\",\n  \"precio\": 1500,\n  \"descripcion\": \"Uso general\",\n  \"urlFoto\": \"https://img.limpiezait.com/lavandina.png\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "2. Listar productos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos"
+              ]
+            },
+            "description": "Esperado: 200"
+          }
+        },
+        {
+          "name": "3. Buscar producto por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "1"
+              ]
+            },
+            "description": "Esperado: 200"
+          }
+        },
+        {
+          "name": "4. Buscar producto inexistente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos/99",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "99"
+              ]
+            },
+            "description": "Esperado: 404"
+          }
+        },
+        {
+          "name": "5. Modificar producto",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "1"
+              ]
+            },
+            "description": "Esperado: 200 con el precio nuevo",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Lavandina 1L\",\n  \"precio\": 1800,\n  \"descripcion\": \"Uso general\",\n  \"urlFoto\": \"https://img.limpiezait.com/lavandina.png\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "6. Borrar producto",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/productos/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "productos",
+                "1"
+              ]
+            },
+            "description": "Esperado: 204"
+          }
+        }
+      ]
+    }
+  ]
+}
