@@ -1,4 +1,4 @@
-package com.limpiezait.api;
+package com.limpiezait.api.config;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
