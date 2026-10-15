@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 
 @Entity
 public class Producto {
@@ -19,11 +20,19 @@ public class Producto {
 	private Double precio;
 	private String descripcion;
 	private String urlFoto;
-	private LocalDateTime fechaCreacion;
+	private LocalDateTime fechaAlta;
 	
 	@ManyToOne
 	@JoinColumn(name = "categoria_id")
 	private Categoria categoria;
+
+	// la fecha de alta la pone el servidor justo antes del INSERT
+	@PrePersist
+	void alPersistir() {
+		if (fechaAlta == null) {
+			fechaAlta = LocalDateTime.now();
+		}
+	}
 
 	public Producto() {
 	}
@@ -76,12 +85,12 @@ public class Producto {
 		this.urlFoto = urlFoto;
 	}
 
-	public LocalDateTime getFechaCreacion() {
-		return fechaCreacion;
+	public LocalDateTime getFechaAlta() {
+		return fechaAlta;
 	}
 
-	public void setFechaCreacion(LocalDateTime fechaCreacion) {
-		this.fechaCreacion = fechaCreacion;
+	public void setFechaAlta(LocalDateTime fechaAlta) {
+		this.fechaAlta = fechaAlta;
 	}
 
 	public Categoria getCategoria() {
