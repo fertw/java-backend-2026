@@ -7,8 +7,10 @@ API REST de productos de limpieza, proyecto integrador del curso **Java Backend*
 - Java 21
 - Spring Boot 4.1
 - Maven
+- Spring Data JPA + H2 (base en memoria: se borra y se vuelve a cargar en cada arranque)
+- Spring Security con Basic Auth
 
-Más adelante: JPA + H2, Spring Security + JWT, springdoc/Swagger.
+Más adelante: JWT, springdoc/Swagger.
 
 ## Cómo correrlo
 
@@ -34,11 +36,35 @@ curl http://localhost:8083/api/ping
 | Método | URL | Descripción | Rol requerido |
 |---|---|---|---|
 | `GET` | `/api/ping` | Verifica que la API esté levantada | — |
-| `GET` | `/api/productos` | Lista todos los productos | — |
-| `GET` | `/api/productos/{id}` | Busca un producto por id (404 si no existe) | — |
-| `POST` | `/api/productos` | Crea un producto (201) | — |
-| `PUT` | `/api/productos/{id}` | Modifica un producto (404 si no existe) | — |
-| `DELETE` | `/api/productos/{id}` | Borra un producto (204, o 404 si no existe) | — |
+| `GET` | `/api/productos` | Lista todos los productos | USER o ADMIN |
+| `GET` | `/api/productos/{id}` | Busca un producto por id (404 si no existe) | USER o ADMIN |
+| `POST` | `/api/productos` | Crea un producto (201) | ADMIN |
+| `PUT` | `/api/productos/{id}` | Modifica un producto (404 si no existe) | ADMIN |
+| `DELETE` | `/api/productos/{id}` | Borra un producto (204, o 404 si no existe) | ADMIN |
+
+Al arrancar se cargan 2 categorías (1 = Pisos, 2 = Baño) y 3 productos de prueba.
+
+## Seguridad (Basic Auth)
+
+Todo `/api/**` pide usuario y contraseña, salvo `/api/ping`. Los usuarios están en memoria (`config/SecurityConfig.java`) y las contraseñas se guardan con BCrypt:
+
+| Usuario | Contraseña | Roles | Puede |
+|---|---|---|---|
+| `user` | `user123` | USER | Consultar (GET) |
+| `admin` | `admin123` | USER, ADMIN | Consultar, crear, modificar y borrar |
+
+```bash
+curl -u user:user123 http://localhost:8083/api/productos
+```
+
+| Código | Significa |
+|---|---|
+| **401 Unauthorized** | No mandaste credenciales, o son incorrectas ("no sé quién sos") |
+| **403 Forbidden** | Las credenciales están bien, pero tu rol no alcanza ("sé quién sos, pero no podés") |
+
+> Basic Auth manda `usuario:contraseña` en Base64, que **no es cifrado**: solo se usa con HTTPS. En la clase 5 lo reemplazamos por JWT.
+
+La consola web de H2 está desactivada desde esta clase (`spring.h2.console.enabled=false`).
 
 ## Probar con Postman
 
@@ -56,6 +82,10 @@ La colección está en `postman/LimpiezaIT.postman_collection.json` y trae todos
 
 La URL base está en la variable `baseUrl` de la colección (`http://localhost:8083`). Si tu API corre en otro puerto: clic en la colección → pestaña **Variables** → cambiar `baseUrl` → **Save**.
 
+### Credenciales
+
+En cada request: pestaña **Authorization** → *Type:* **Basic Auth** → usuario y contraseña. Para no cargarlas una por una, configurarlas en la colección (clic en la colección → **Authorization**) y dejar los requests en *Inherit auth from parent*.
+
 ### Enviar JSON a mano
 
 Si armás un request desde cero (por ejemplo, un `POST` para crear un producto):
@@ -69,16 +99,35 @@ Si armás un request desde cero (por ejemplo, un `POST` para crear un producto):
   "nombre": "Lavandina 1L",
   "precio": 1500,
   "descripcion": "Uso general",
-  "urlFoto": "https://img.limpiezait.com/lavandina.png"
+  "url_foto": "https://img.limpiezait.com/lavandina.png",
+  "categoria_id": 2
 }
 ```
 
-El `id` no se manda: lo asigna la API.
+Los nombres del JSON los define `ProductoDTO`: se escribe `url_foto` y `categoria_id`, no `urlFoto`. No se mandan `id`, `fecha_alta` ni `categoria`: los completa la API. La respuesta los trae:
+
+```json
+{
+  "id": 4,
+  "nombre": "Lavandina 1L",
+  "precio": 1500.0,
+  "descripcion": "Uso general",
+  "url_foto": "https://img.limpiezait.com/lavandina.png",
+  "fecha_alta": "20/10/2026 19:32",
+  "categoria_id": 2,
+  "categoria": "Baño"
+}
+```
+
+Los campos en `null` no aparecen en la respuesta.
 
 | Problema | Causa |
 |---|---|
 | **415 Unsupported Media Type** | El body quedó en *Text*, no en **JSON** |
-| Se guarda todo en `null` | Los nombres de los campos no coinciden con los de la clase |
+| **401 Unauthorized** | Falta la pestaña *Authorization* o la contraseña está mal |
+| **403 Forbidden** | Usaste `user` para un POST, PUT o DELETE: hace falta `admin` |
+| Un campo llega en `null` | Su nombre no coincide con el del DTO (por ejemplo, `urlFoto` en vez de `url_foto`) |
+| **404** "Categoría N no encontrada" | El `categoria_id` no existe |
 | `Could not send request` | La API no está levantada o el puerto de `baseUrl` es otro |
 
 ## Estructura del repositorio
