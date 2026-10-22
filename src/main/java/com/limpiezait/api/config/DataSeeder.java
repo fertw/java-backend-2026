@@ -1,22 +1,30 @@
 package com.limpiezait.api.config;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.limpiezait.api.model.Categoria;
 import com.limpiezait.api.model.Producto;
+import com.limpiezait.api.model.Rol;
+import com.limpiezait.api.model.Usuario;
 import com.limpiezait.api.repository.CategoriaRepository;
 import com.limpiezait.api.repository.ProductoRepository;
+import com.limpiezait.api.repository.UsuarioRepository;
 
 @Component
 public class DataSeeder implements CommandLineRunner {
 
     private final CategoriaRepository categoriaRepository;
     private final ProductoRepository productoRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public DataSeeder(CategoriaRepository categoriaRepository, ProductoRepository productoRepository) {
+    public DataSeeder(CategoriaRepository categoriaRepository, ProductoRepository productoRepository,UsuarioRepository usuarioRepository,PasswordEncoder passwordEncoder) {
         this.categoriaRepository = categoriaRepository;
         this.productoRepository = productoRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -27,6 +35,9 @@ public class DataSeeder implements CommandLineRunner {
         productoRepository.save(nuevo("Lavandina 1L", 1500.0, "Uso general", banio));
         productoRepository.save(nuevo("Limpiador de pisos lavanda", 2300.0, "Botella 900 ml", pisos));
         productoRepository.save(nuevo("Desodorante de ambientes", 1900.0, "Aerosol 360 ml", banio));
+        usuarioRepository.save(new Usuario("admin", passwordEncoder.encode("admin123"), Rol.ADMIN));
+        usuarioRepository.save(new Usuario("user", passwordEncoder.encode("user123"), Rol.USER));
+    
     }
 
     private Producto nuevo(String nombre, Double precio, String descripcion, Categoria categoria) {
