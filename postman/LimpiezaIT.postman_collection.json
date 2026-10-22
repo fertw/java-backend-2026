@@ -1,13 +1,27 @@
 {
   "info": {
     "name": "LimpiezaIT",
-    "description": "Colección del curso Java Backend de educaciónIT. Clase 1: CRUD de productos en memoria.",
+    "description": "Colección del curso Java Backend de educaciónIT (hasta la clase 5: login con JWT).\n\nPrimero correr un request de la carpeta Auth: guarda el token en la variable token y los demás requests lo mandan como Bearer (Authorization de la colección).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:8083"
+    },
+    {
+      "key": "token",
+      "value": ""
     }
   ],
   "item": [
@@ -26,8 +40,132 @@
             "ping"
           ]
         },
-        "description": "Esperado: 200"
+        "description": "Esperado: 200 (no pide token)",
+        "auth": {
+          "type": "noauth"
+        }
       }
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Esperado: 200 con el token. El script lo guarda en la variable token de la colección, y los demás requests lo usan solos.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set(\"token\", pm.response.json().token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login user",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Esperado: 200 con el token. El script lo guarda en la variable token de la colección, y los demás requests lo usan solos.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"user\",\n  \"password\": \"user123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  pm.collectionVariables.set(\"token\", pm.response.json().token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login con contraseña incorrecta",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Esperado: 401 \"Usuario o contraseña incorrectos\"",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"mal\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
     },
     {
       "name": "Productos",
@@ -47,10 +185,10 @@
                 "productos"
               ]
             },
-            "description": "Esperado: 201 con id",
+            "description": "Esperado: 201 con id (solo ADMIN; con user da 403)",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Lavandina 1L\",\n  \"precio\": 1500,\n  \"descripcion\": \"Uso general\",\n  \"urlFoto\": \"https://img.limpiezait.com/lavandina.png\"\n}",
+              "raw": "{\n  \"nombre\": \"Lavandina 1L\",\n  \"precio\": 1500,\n  \"descripcion\": \"Uso general\",\n  \"url_foto\": \"https://img.limpiezait.com/lavandina.png\",\n  \"categoria_id\": 2\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -74,7 +212,7 @@
                 "productos"
               ]
             },
-            "description": "Esperado: 200"
+            "description": "Esperado: 200 (USER o ADMIN; sin token da 401)"
           }
         },
         {
@@ -131,10 +269,10 @@
                 "1"
               ]
             },
-            "description": "Esperado: 200 con el precio nuevo",
+            "description": "Esperado: 200 con el precio nuevo (solo ADMIN)",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Lavandina 1L\",\n  \"precio\": 1800,\n  \"descripcion\": \"Uso general\",\n  \"urlFoto\": \"https://img.limpiezait.com/lavandina.png\"\n}",
+              "raw": "{\n  \"nombre\": \"Lavandina 1L\",\n  \"precio\": 1800,\n  \"descripcion\": \"Uso general\",\n  \"url_foto\": \"https://img.limpiezait.com/lavandina.png\",\n  \"categoria_id\": 2\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -159,7 +297,49 @@
                 "1"
               ]
             },
-            "description": "Esperado: 204"
+            "description": "Esperado: 204 (solo ADMIN)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "item": [
+        {
+          "name": "Quién soy",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "me"
+              ]
+            },
+            "description": "Esperado: 200 con el username y los roles del token"
+          }
+        },
+        {
+          "name": "Listar usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
+            },
+            "description": "Esperado: 200 con admin, 403 con user"
           }
         }
       ]
