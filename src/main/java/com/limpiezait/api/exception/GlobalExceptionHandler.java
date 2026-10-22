@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -21,6 +22,12 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<Map<String, Object>> handleBadRequest(IllegalArgumentException ex) {
 		return error(HttpStatus.BAD_REQUEST, ex.getMessage());
 	}
+	
+	@ExceptionHandler(BadCredentialsException.class)
+	public ResponseEntity<Map<String, Object>> handleBadCredentials(BadCredentialsException ex) {
+	    return error(HttpStatus.UNAUTHORIZED, "Usuario o contraseña incorrectos");
+	}
+
 
 	private ResponseEntity<Map<String, Object>> error(HttpStatus status, String mensaje) {
 		Map<String, Object> body = new LinkedHashMap<>();
