@@ -8,9 +8,9 @@ API REST de productos de limpieza, proyecto integrador del curso **Java Backend*
 - Spring Boot 4.1
 - Maven
 - Spring Data JPA + H2 (base en memoria: se borra y se vuelve a cargar en cada arranque)
-- Spring Security con Basic Auth
+- Spring Security con JWT (librería JJWT)
 
-Más adelante: JWT, springdoc/Swagger.
+Más adelante: springdoc/Swagger.
 
 ## Cómo correrlo
 
@@ -36,35 +36,56 @@ curl http://localhost:8083/api/ping
 | Método | URL | Descripción | Rol requerido |
 |---|---|---|---|
 | `GET` | `/api/ping` | Verifica que la API esté levantada | — |
+| `POST` | `/auth/login` | Devuelve un token JWT (401 si las credenciales son incorrectas) | — |
 | `GET` | `/api/productos` | Lista todos los productos | USER o ADMIN |
 | `GET` | `/api/productos/{id}` | Busca un producto por id (404 si no existe) | USER o ADMIN |
 | `POST` | `/api/productos` | Crea un producto (201) | ADMIN |
 | `PUT` | `/api/productos/{id}` | Modifica un producto (404 si no existe) | ADMIN |
 | `DELETE` | `/api/productos/{id}` | Borra un producto (204, o 404 si no existe) | ADMIN |
+| `GET` | `/api/usuarios/me` | Muestra el usuario y los roles del token | USER o ADMIN |
+| `GET` | `/api/usuarios` | Lista los usuarios | ADMIN |
 
-Al arrancar se cargan 2 categorías (1 = Pisos, 2 = Baño) y 3 productos de prueba.
+Al arrancar se cargan 2 categorías (1 = Pisos, 2 = Baño), 3 productos y 2 usuarios de prueba (`config/DataSeeder.java`).
 
-## Seguridad (Basic Auth)
+## Seguridad (JWT)
 
-Todo `/api/**` pide usuario y contraseña, salvo `/api/ping`. Los usuarios están en memoria (`config/SecurityConfig.java`) y las contraseñas se guardan con BCrypt:
+Todo `/api/**` pide un token, salvo `/api/ping`. El flujo es:
 
-| Usuario | Contraseña | Roles | Puede |
+1. `POST /auth/login` con usuario y contraseña → la API devuelve un **token JWT**.
+2. En cada request siguiente se manda el header `Authorization: Bearer <token>`.
+3. `JwtAuthFilter` valida el token (firma y vencimiento) y carga el usuario con sus roles.
+
+Los usuarios se guardan en la tabla `usuarios` con la contraseña en BCrypt, y se cargan con `security/CustomUserDetailsService.java`:
+
+| Usuario | Contraseña | Rol | Puede |
 |---|---|---|---|
 | `user` | `user123` | USER | Consultar (GET) |
-| `admin` | `admin123` | USER, ADMIN | Consultar, crear, modificar y borrar |
+| `admin` | `admin123` | ADMIN | Consultar, crear, modificar y borrar; listar usuarios |
 
 ```bash
-curl -u user:user123 http://localhost:8083/api/productos
+# 1. Login
+curl -X POST http://localhost:8083/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"user","password":"user123"}'
+# {"token":"eyJhbGciOiJIUzM4NCJ9...","tipo":"Bearer"}
+
+# 2. Usar el token
+curl http://localhost:8083/api/productos -H "Authorization: Bearer eyJhbGciOiJIUzM4NCJ9..."
 ```
 
 | Código | Significa |
 |---|---|
-| **401 Unauthorized** | No mandaste credenciales, o son incorrectas ("no sé quién sos") |
-| **403 Forbidden** | Las credenciales están bien, pero tu rol no alcanza ("sé quién sos, pero no podés") |
+| **401 Unauthorized** | No mandaste token, es inválido o venció ("no sé quién sos"). En el login: usuario o contraseña incorrectos |
+| **403 Forbidden** | El token es válido, pero tu rol no alcanza ("sé quién sos, pero no podés") |
 
-> Basic Auth manda `usuario:contraseña` en Base64, que **no es cifrado**: solo se usa con HTTPS. En la clase 5 lo reemplazamos por JWT.
+Configuración en `application.properties`:
 
-La consola web de H2 está desactivada desde esta clase (`spring.h2.console.enabled=false`).
+- `jwt.secret`: clave en Base64 con la que se firman los tokens. Se toma de la variable de entorno `JWT_SECRET`; el valor por defecto del archivo es **solo para el curso**: en producción no se deja una clave en el repositorio.
+- `jwt.expiracion-ms`: duración del token, 1800000 ms = 30 minutos. Al vencer, hay que volver a hacer login.
+
+Los permisos se definen por URL en `config/SecurityConfig.java` y también por método con `@PreAuthorize` (ver `UsuarioController`). Para que `@PreAuthorize` funcione, `SecurityConfig` necesita `@EnableMethodSecurity`: sin esa anotación Spring la ignora sin avisar.
+
+La consola web de H2 está desactivada desde la clase 4 (`spring.h2.console.enabled=false`).
 
 ## Probar con Postman
 
@@ -82,9 +103,22 @@ La colección está en `postman/LimpiezaIT.postman_collection.json` y trae todos
 
 La URL base está en la variable `baseUrl` de la colección (`http://localhost:8083`). Si tu API corre en otro puerto: clic en la colección → pestaña **Variables** → cambiar `baseUrl` → **Save**.
 
-### Credenciales
+### Login y token
 
-En cada request: pestaña **Authorization** → *Type:* **Basic Auth** → usuario y contraseña. Para no cargarlas una por una, configurarlas en la colección (clic en la colección → **Authorization**) y dejar los requests en *Inherit auth from parent*.
+1. Correr **Auth → Login admin** (o **Login user**). Un script del request guarda el token en la variable `token` de la colección.
+2. Los demás requests lo mandan solos: la colección tiene *Authorization* → **Bearer Token** con `{{token}}`, y los requests están en *Inherit auth from parent*.
+3. Para cambiar de usuario, correr el otro login. Cuando el token vence (30 minutos) los requests dan 401: volver a hacer login.
+
+Si armás un request desde cero: pestaña **Authorization** → *Type:* **Bearer Token** → pegar el token, **sin** escribir `Bearer` adelante (Postman lo agrega). Escribiendo el header a mano en **Headers**: `Authorization` = `Bearer eyJ...`, con un espacio entre `Bearer` y el token.
+
+El login es `POST {{baseUrl}}/auth/login` (sin `/api`), con body **raw → JSON**:
+
+```json
+{
+  "username": "admin",
+  "password": "admin123"
+}
+```
 
 ### Enviar JSON a mano
 
@@ -124,8 +158,9 @@ Los campos en `null` no aparecen en la respuesta.
 | Problema | Causa |
 |---|---|
 | **415 Unsupported Media Type** | El body quedó en *Text*, no en **JSON** |
-| **401 Unauthorized** | Falta la pestaña *Authorization* o la contraseña está mal |
-| **403 Forbidden** | Usaste `user` para un POST, PUT o DELETE: hace falta `admin` |
+| **401 Unauthorized** | No hiciste login, el token venció o quedó `Bearer Bearer ...` en el header. En el login: la contraseña está mal o mandaste `usuario` en vez de `username` |
+| **405 Method Not Allowed** en el login | Lo mandaste como `GET`: es `POST` |
+| **403 Forbidden** | Usaste el token de `user` para un POST, PUT, DELETE o para listar usuarios: hace falta `admin` |
 | Un campo llega en `null` | Su nombre no coincide con el del DTO (por ejemplo, `urlFoto` en vez de `url_foto`) |
 | **404** "Categoría N no encontrada" | El `categoria_id` no existe |
 | `Could not send request` | La API no está levantada o el puerto de `baseUrl` es otro |
