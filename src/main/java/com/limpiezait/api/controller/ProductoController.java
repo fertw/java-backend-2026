@@ -17,6 +17,12 @@ import com.limpiezait.api.dto.ProductoDTO;
 import com.limpiezait.api.model.Producto;
 import com.limpiezait.api.service.ProductoService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "Productos", description = "Operaciones relacionadas con productos de limpieza")
 @RestController
 @RequestMapping("/api/productos")
 public class ProductoController {
@@ -27,6 +33,12 @@ public class ProductoController {
 		this.productoService = productoService;
 	}
 
+	@Operation(summary = "Obtener todos los productos", description = "Devuelve una lista de todos los productos de limpieza disponibles.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Lista de productos obtenida correctamente"),
+			@ApiResponse(responseCode = "401", description = "No autorizado"),
+			@ApiResponse(responseCode = "403", description = "Prohibido"),
+			@ApiResponse(responseCode = "404", description = "No encontrado") })
 	@GetMapping
 	public List<ProductoDTO> getAllProductos() {
 		return productoService.listar();
