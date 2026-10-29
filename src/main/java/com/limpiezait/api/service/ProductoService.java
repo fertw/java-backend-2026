@@ -33,27 +33,11 @@ public class ProductoService {
 	}
 
 	public ProductoDTO crear(ProductoDTO dto) {
-		validar(dto);
 		Producto producto = ProductoMapper.toEntity(dto);
 		if (dto.categoriaId() != null) {
 			producto.setCategoria(categoriaService.getEntityById(dto.categoriaId()));
 		}
 		return ProductoMapper.toDTO(productoRepository.save(producto));
-	}
-
-	private void validar(ProductoDTO dto) {
-		if (dto.nombre() == null || dto.nombre().isBlank()) {
-			throw new IllegalArgumentException("El nombre es obligatorio");
-		}
-		if (dto.precio() == null || dto.precio() < 0) {
-			throw new IllegalArgumentException("El precio debe ser mayor o igual a cero");
-		}
-		if (dto.descripcion() == null || dto.descripcion().isBlank()) {
-			throw new IllegalArgumentException("La descripción es obligatoria");
-		}
-		if (dto.urlFoto() == null || dto.urlFoto().isBlank()) {
-			throw new IllegalArgumentException("La URL de la foto es obligatoria");
-		}
 	}
 
 	public void eliminar(Long id) {
@@ -65,7 +49,6 @@ public class ProductoService {
 	}
 
 	public void actualizar(Long id, ProductoDTO producto) {
-		validar(producto);
 		Producto productoExistente = productoRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + id));
 		productoExistente.setNombre(producto.nombre());
@@ -78,7 +61,7 @@ public class ProductoService {
 			productoExistente.setCategoria(null);
 		}
 		productoRepository.save(productoExistente);
-		
+
 	}
 
 }

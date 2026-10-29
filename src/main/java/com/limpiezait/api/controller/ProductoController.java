@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @Tag(name = "Productos", description = "Operaciones relacionadas con productos de limpieza")
 @RestController
@@ -50,12 +51,12 @@ public class ProductoController {
 	}
 
 	@PostMapping
-	public ResponseEntity<ProductoDTO> createProducto(@RequestBody ProductoDTO producto) {
+	public ResponseEntity<ProductoDTO> createProducto(@Valid @RequestBody ProductoDTO producto) {
 		return ResponseEntity.status(HttpStatus.CREATED).body(productoService.crear(producto));
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<ProductoDTO> updateProducto(@PathVariable Long id, @RequestBody ProductoDTO producto) {
+	public ResponseEntity<ProductoDTO> updateProducto(@PathVariable Long id, @Valid @RequestBody ProductoDTO producto) {
 		productoService.actualizar(id, producto);
 		return ResponseEntity.ok(productoService.buscarPorId(id));
 	}
