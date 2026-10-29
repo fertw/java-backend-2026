@@ -20,7 +20,8 @@ public class DataSeeder implements CommandLineRunner {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DataSeeder(CategoriaRepository categoriaRepository, ProductoRepository productoRepository,UsuarioRepository usuarioRepository,PasswordEncoder passwordEncoder) {
+    public DataSeeder(CategoriaRepository categoriaRepository, ProductoRepository productoRepository,
+            UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
         this.categoriaRepository = categoriaRepository;
         this.productoRepository = productoRepository;
         this.usuarioRepository = usuarioRepository;
@@ -37,7 +38,7 @@ public class DataSeeder implements CommandLineRunner {
         productoRepository.save(nuevo("Desodorante de ambientes", 1900.0, "Aerosol 360 ml", banio));
         usuarioRepository.save(new Usuario("admin", passwordEncoder.encode("admin123"), Rol.ADMIN));
         usuarioRepository.save(new Usuario("user", passwordEncoder.encode("user123"), Rol.USER));
-    
+
     }
 
     private Producto nuevo(String nombre, Double precio, String descripcion, Categoria categoria) {
